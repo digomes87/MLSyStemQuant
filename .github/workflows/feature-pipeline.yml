@@ -46,9 +46,8 @@ jobs:
       - name: 🔒 Security Scan (Bandit)
         run: |
           source .venv/bin/activate
-          bandit -r . -c "pyproject.toml" -ll || echo "Security scan found low severity issues (non-blocking)"
-          # Fail on High Severity
-          bandit -r . -lll
+          # Exclude .venv from scan
+          bandit -r . -x ./.venv -lll
 
       - name: 🧪 Run Tests (Pytest)
         run: |
