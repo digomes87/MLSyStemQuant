@@ -86,6 +86,7 @@ coverage.xml
 .pytest_cache/
 cover/
 
+.env
 # Translations
 *.mo
 *.pot
