@@ -1,0 +1,133 @@
+name: Feature Branch Pipeline
+
+on:
+  push:
+    branches:
+      - 'feature/*'
+      - 'bugfix/*'
+      - 'hotfix/*'
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  quality-gate:
+    name: 🛡️ Quality Gate (Lint, Security, Tests)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Important for git history and conflict checks
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Dependencies
+        run: |
+          uv venv
+          source .venv/bin/activate
+          uv pip install -r requirements.txt
+
+      - name: 🧹 Linting (Ruff)
+        run: |
+          source .venv/bin/activate
+          # Check for linting errors
+          ruff check .
+          # Check formatting
+          ruff format --check .
+
+      - name: 🔒 Security Scan (Bandit)
+        run: |
+          source .venv/bin/activate
+          bandit -r . -c "pyproject.toml" -ll || echo "Security scan found low severity issues (non-blocking)"
+          # Fail on High Severity
+          bandit -r . -lll
+
+      - name: 🧪 Run Tests (Pytest)
+        run: |
+          source .venv/bin/activate
+          # Assuming tests folder exists, if not, create a dummy test to pass
+          if [ -d "tests" ]; then
+            pytest tests/ --cov=. --cov-report=xml
+          else
+            echo "No tests directory found. Skipping tests."
+          fi
+
+  auto-pr:
+    name: 🤖 Auto Pull Request
+    needs: quality-gate
+    runs-on: ubuntu-latest
+    if: success()
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check for Conflicts with Develop
+        run: |
+          git fetch origin develop
+          # Attempt a merge in memory to check for conflicts
+          if git merge-tree $(git merge-base HEAD origin/develop) HEAD origin/develop | grep -q "<<<<<<<"; then
+            echo "::error::Merge conflicts detected with develop branch. Please resolve conflicts locally before pushing."
+            exit 1
+          else
+            echo "✅ No merge conflicts detected."
+          fi
+
+      - name: Generate PR Details
+        id: pr_details
+        run: |
+          # Get the last commit message as title
+          TITLE=$(git log -1 --pretty=%s)
+          echo "title=$TITLE" >> $GITHUB_OUTPUT
+          
+          # Read template
+          BODY=$(cat .github/pull_request_template.md)
+          
+          # Append recent commits to body
+          COMMITS=$(git log --pretty=format:"- %h %s" -n 5)
+          FULL_BODY="${BODY}\n\n## 📜 Recent Commits\n${COMMITS}"
+          
+          # Escape newlines for GitHub Output
+          EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
+          echo "body<<$EOF" >> $GITHUB_OUTPUT
+          echo "$FULL_BODY" >> $GITHUB_OUTPUT
+          echo "$EOF" >> $GITHUB_OUTPUT
+
+      - name: Create Pull Request
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Check if PR exists
+          EXISTING_PR=$(gh pr list --head ${{ github.ref_name }} --base develop --json url --jq '.[0].url')
+          
+          if [ -n "$EXISTING_PR" ]; then
+            echo "PR already exists: $EXISTING_PR"
+            exit 0
+          fi
+          
+          # Create PR
+          gh pr create \
+            --base develop \
+            --head ${{ github.ref_name }} \
+            --title "${{ steps.pr_details.outputs.title }}" \
+            --body "${{ steps.pr_details.outputs.body }}" \
+            --draft=false \
+            --reviewer "${{ github.actor }}" 
+            # Note: GitHub Actions cannot assign the PR creator as reviewer in some configurations, 
+            # but we attempt it or you can use a specific team like --reviewer "my-org/team-name"
+
+      - name: 📢 Notify Team (Slack Placeholder)
+        if: success()
+        run: |
+          echo "Sending notification to Slack..."
+          # Uncomment and configure if you have a webhook
+          # curl -X POST -H 'Content-type: application/json' \
+          # --data '{"text":"🚀 New PR Created: ${{ github.ref_name }} -> develop"}' \
+          # ${{ secrets.SLACK_WEBHOOK_URL }}
