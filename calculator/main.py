@@ -16,3 +16,6 @@ KAFKA_TOPIC_MARKET = os.getenv("KAFKA_TOPIC_MARKET_DATA", "market_data")
 KAFKA_TOPIC_NAV = os.getenv("KAFKA_TOPIC_ETF_NAV", "etf_nav")
 KAFKA_GROUP_ID = os.getenv("KAFKA_GROUP_ID", "nav_calculator_group")
 CONFIG_FILE = "etf_config.json"  # Assuming it's in the same directory or passed
+
+
+class NAVCalculator: ...
