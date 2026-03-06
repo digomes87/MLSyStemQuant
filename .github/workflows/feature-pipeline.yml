@@ -67,6 +67,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Check for Conflicts with Develop
         run: |
@@ -87,33 +89,49 @@ jobs:
           echo "title=$TITLE" >> $GITHUB_OUTPUT
           
           # Read template
-          BODY=$(cat .github/pull_request_template.md)
+          if [ -f .github/pull_request_template.md ]; then
+            BODY=$(cat .github/pull_request_template.md)
+          else
+            BODY="Automated PR created by CI pipeline."
+          fi
           
           # Append recent commits to body
           COMMITS=$(git log --pretty=format:"- %h %s" -n 5)
-          FULL_BODY="${BODY}\n\n##  Recent Commits\n${COMMITS}"
+          FULL_BODY="${BODY}\n\n## Recent Commits\n${COMMITS}"
           
           # Escape newlines for GitHub Output
           EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
           echo "body<<$EOF" >> $GITHUB_OUTPUT
-          echo "$FULL_BODY" >> $GITHUB_OUTPUT
+          echo -e "$FULL_BODY" >> $GITHUB_OUTPUT
           echo "$EOF" >> $GITHUB_OUTPUT
 
       - name: Create Pull Request
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_BODY: ${{ steps.pr_details.outputs.body }}
         run: |
+          # Check for changes
+          CHANGES=$(git rev-list --count origin/develop..HEAD)
+          if [ "$CHANGES" -eq 0 ]; then
+            echo "No commits to merge into develop. Skipping PR creation."
+            exit 0
+          fi
+
+          # Check if PR exists
           EXISTING_PR=$(gh pr list --head ${{ github.ref_name }} --base develop --json url --jq '.[0].url')
           if [ -n "$EXISTING_PR" ]; then
             echo "PR already exists: $EXISTING_PR"
             exit 0
           fi
           
+          # Save body to file to avoid syntax errors
+          echo "$PR_BODY" > pr_body.md
+          
           if ! gh pr create \
             --base develop \
             --head ${{ github.ref_name }} \
             --title "${{ steps.pr_details.outputs.title }}" \
-            --body "${{ steps.pr_details.outputs.body }}" \
+            --body-file pr_body.md \
             --draft=false \
             --reviewer "${{ github.actor }}"; then
             
