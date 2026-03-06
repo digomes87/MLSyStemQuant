@@ -64,10 +64,66 @@ class NAVCalculator:
         return round(nav, 4)
 
     def process_message(self, msg):
-        pass
+        if msg.error():
+            if msg.error().code == KafkaError._PARTITION_EOF:
+                sys.stderr.write(
+                    "%% %s [%d] reached and at offset %d\n"
+                    % (msg.topic(), msg.partition(), msg.offset())
+                )
+            elif msg.error():
+                raise KafkaError(msg.error())
+        else:
+            try:
+                data = json.loads(msg.value().decode("utf-8"))
+                symbol = data["symbol"]
+                price = data["price"]
+                # timestamp = data["timestamp"]
+
+                if symbol in self.current_prices:
+                    self.current_prices[symbol] = price
+
+                    nav = self.calculate_nav()
+
+                    nav_update = {
+                        "etf": self.config["symbol"],
+                        "nav": nav,
+                        "timestamp": time.time(),
+                        "trigger_symbol": symbol,
+                        "trigger_price": price,
+                    }
+
+                    self.producer.produce(
+                        KAFKA_TOPIC_NAV,
+                        key=self.config["symbol"],
+                        value=json.dumps(nav_update),
+                    )
+
+                    self.producer.poll(0)
+
+                    print(f"Updated NAV: {nav} (Trigger: {symbol} @ {price})")
+            except json.JSONDecodeError:
+                print(f"Error decoding JSON: {msg.value()}")
+            except KeyError as e:
+                print(f"Missing key in data: {e}")
 
     def run(self):
-        pass
+        print(
+            f"Starting NAV Calculator. Consuming: {KAFKA_TOPIC_MARKET}, Producing: {KAFKA_TOPIC_NAV}"
+        )
+
+        try:
+            while self.running:
+                msg = self.consumer.poll(1.0)
+                if msg is None:
+                    continue
+
+                self.process_message(msg)
+
+        except KeyboardInterrupt:
+            print("\nstopping calculator ...")
+        finally:
+            self.consumer.close()
+            self.producer.flush()
 
 
 if __name__ == "__main__":
