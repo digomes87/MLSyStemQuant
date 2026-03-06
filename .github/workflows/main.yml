@@ -15,7 +15,7 @@ permissions:
   pull-requests: write
 
 jobs:
-  crian-pipeline:
+  create-pipeline:
     runs-on: ubuntu-latest
 
     steps:
@@ -46,7 +46,7 @@ jobs:
           # pytest
 
   create-pr:
-    needs: test # Only runs if the 'test' job passes successfully
+    needs: create-pipeline
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
 
