@@ -9,3 +9,8 @@ watchdog>=4.0.0
 streamlit>=1.31.1
 plotly>=5.18.0
 altair>=5.2.0
+
+# Dev & QA
+pytest>=8.0.0
+ruff>=0.3.0
+bandit>=1.7.0
