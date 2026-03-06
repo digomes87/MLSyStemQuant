@@ -103,24 +103,23 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Check if PR exists
           EXISTING_PR=$(gh pr list --head ${{ github.ref_name }} --base develop --json url --jq '.[0].url')
-          
           if [ -n "$EXISTING_PR" ]; then
             echo "PR already exists: $EXISTING_PR"
             exit 0
           fi
           
-          # Create PR
-          gh pr create \
+          if ! gh pr create \
             --base develop \
             --head ${{ github.ref_name }} \
             --title "${{ steps.pr_details.outputs.title }}" \
             --body "${{ steps.pr_details.outputs.body }}" \
             --draft=false \
-            --reviewer "${{ github.actor }}" 
-            # Note: GitHub Actions cannot assign the PR creator as reviewer in some configurations, 
-            # but we attempt it or you can use a specific team like --reviewer "my-org/team-name"
+            --reviewer "${{ github.actor }}"; then
+            
+            echo "::error::❌ Failed to create PR. CRITICAL: You must enable 'Allow GitHub Actions to create and approve pull requests' in Repository Settings > Actions > General > Workflow permissions."
+            exit 1
+          fi
 
       - name: Notify Team (Slack Placeholder)
         if: success()
