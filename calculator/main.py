@@ -23,42 +23,57 @@ class NAVCalculator:
         self.running = True
         self.config = self._load_config(config_file)
 
-    # kafka setup
-    self.consumer = Consumer(
-        {
-            "bootstrap.server": KAFKA_BOOTSTRAP_SERVERS,
-            "group.id": KAFKA_GROUP_ID,
-            "auto.offset.reset": "earliest",
+        # kafka setup
+        self.consumer = Consumer(
+            {
+                "bootstrap.server": KAFKA_BOOTSTRAP_SERVERS,
+                "group.id": KAFKA_GROUP_ID,
+                "auto.offset.reset": "earliest",
+            }
+        )
+
+        self.producer = Producer({"bootstrap.servers": KAFKA_BOOTSTRAP_SERVERS})
+
+        # State
+        self.components = self.config["components"]
+        self.current_prices = {
+            symbol: data["initial_price"] for symbol, data in self.components.items()
         }
-    )
 
-    self.producer = Producer({"bootstrap.servers": KAFKA_BOOTSTRAP_SERVERS})
+        self.shares_outstanding = self.config["outstanding_shares"]
+        self.cash_component = self.config["cash_component"]
 
-    # State
-    self.components = self.config["components"]
-    self.current_prices = {
-        symbol: data["initial_price"] for symbol, data in self.components.items()
-    }
-
-    self.shares_outstanding = self.config["outstanding_shares"]
-    self.cash_component = self.config["cash_component"]
-
-    # subscribe to market data
-    self.consumer.subscribe({KAFKA_TOPIC_MARKET})
+        # subscribe to market data
+        self.consumer.subscribe({KAFKA_TOPIC_MARKET})
 
     def _load_config(self, config_file):
         path = os.path.join(os.path.dirname(__file__), "..", "producer", config_file)
         with open(path, "r") as f:
             return json.load(f)
 
-    def run():
+    def calculate_nav(self):
+        """Calculates the current NAV based on latest component prices"""
+        total_asset_value = self.cash_component
+
+        for symbol, data in self.components.items():
+            price = self.current_prices.get(symbol, 0)
+            holdings = data["shares"]
+            total_asset_value += price * holdings
+
+        nav = total_asset_value / self.shares_outstanding
+        return round(nav, 4)
+
+    def process_message(self, msg):
+        pass
+
+    def run(self):
         pass
 
 
 if __name__ == "__main__":
     calculator = NAVCalculator(CONFIG_FILE)
 
-    def signal_handler(*, _):
+    def signal_handler(*_):
         print("\nGracefully shutting donw ... ")
         sys.exit(0)
 
