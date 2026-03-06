@@ -15,7 +15,7 @@ permissions:
   pull-requests: write
 
 jobs:
-  test:
+  crian-pipeline:
     runs-on: ubuntu-latest
 
     steps:
