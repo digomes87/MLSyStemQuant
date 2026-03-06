@@ -1,0 +1,12 @@
+{
+  "symbol": "TECH_ETF",
+  "components": {
+    "AAPL": { "shares": 1000, "initial_price": 175.0 },
+    "MSFT": { "shares": 500, "initial_price": 320.0 },
+    "GOOGL": { "shares": 200, "initial_price": 140.0 },
+    "AMZN": { "shares": 800, "initial_price": 130.0 },
+    "NVDA": { "shares": 300, "initial_price": 450.0 }
+  },
+  "cash_component": 50000.0,
+  "outstanding_shares": 50000
+}
