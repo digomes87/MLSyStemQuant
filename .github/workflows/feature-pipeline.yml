@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   quality-gate:
-    name: 🛡️ Quality Gate (Lint, Security, Tests)
+    name:  Quality Gate (Lint, Security, Tests)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -35,7 +35,7 @@ jobs:
           source .venv/bin/activate
           uv pip install -r requirements.txt
 
-      - name: 🧹 Linting (Ruff)
+      - name: Linting (Ruff)
         run: |
           source .venv/bin/activate
           # Check for linting errors
@@ -43,13 +43,13 @@ jobs:
           # Check formatting
           ruff format --check .
 
-      - name: 🔒 Security Scan (Bandit)
+      - name: Security Scan (Bandit)
         run: |
           source .venv/bin/activate
           # Exclude .venv from scan
           bandit -r . -x ./.venv -lll
 
-      - name: 🧪 Run Tests (Pytest)
+      - name: Run Tests (Pytest)
         run: |
           source .venv/bin/activate
           # Assuming tests folder exists, if not, create a dummy test to pass
@@ -60,7 +60,7 @@ jobs:
           fi
 
   auto-pr:
-    name: 🤖 Auto Pull Request
+    name: Auto Pull Request
     needs: quality-gate
     runs-on: ubuntu-latest
     if: success()
@@ -76,7 +76,7 @@ jobs:
             echo "::error::Merge conflicts detected with develop branch. Please resolve conflicts locally before pushing."
             exit 1
           else
-            echo "✅ No merge conflicts detected."
+            echo "No merge conflicts detected."
           fi
 
       - name: Generate PR Details
@@ -91,7 +91,7 @@ jobs:
           
           # Append recent commits to body
           COMMITS=$(git log --pretty=format:"- %h %s" -n 5)
-          FULL_BODY="${BODY}\n\n## 📜 Recent Commits\n${COMMITS}"
+          FULL_BODY="${BODY}\n\n##  Recent Commits\n${COMMITS}"
           
           # Escape newlines for GitHub Output
           EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
@@ -122,11 +122,11 @@ jobs:
             # Note: GitHub Actions cannot assign the PR creator as reviewer in some configurations, 
             # but we attempt it or you can use a specific team like --reviewer "my-org/team-name"
 
-      - name: 📢 Notify Team (Slack Placeholder)
+      - name: Notify Team (Slack Placeholder)
         if: success()
         run: |
           echo "Sending notification to Slack..."
           # Uncomment and configure if you have a webhook
           # curl -X POST -H 'Content-type: application/json' \
-          # --data '{"text":"🚀 New PR Created: ${{ github.ref_name }} -> develop"}' \
+          # --data '{"text":" New PR Created: ${{ github.ref_name }} -> develop"}' \
           # ${{ secrets.SLACK_WEBHOOK_URL }}

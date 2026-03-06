@@ -1,8 +1,8 @@
-# 🚀 CI/CD Process Automation Documentation
+# CI/CD Process Automation Documentation
 
 This document outlines the automated pipeline for the **QuantML** project. The goal is to ensure code quality, security, and seamless integration through automated Pull Requests.
 
-## 🔄 Workflow Overview
+##  Workflow Overview
 
 The automation is triggered whenever code is pushed to any of the following branch patterns:
 - `feature/*`
@@ -14,20 +14,20 @@ The automation is triggered whenever code is pushed to any of the following bran
 ```mermaid
 graph TD
     A[Push to feature/*] --> B{Quality Gate}
-    B -->|Fail| C[Pipeline Failed ❌]
+    B -->|Fail| C[Pipeline Failed ]
     B -->|Pass| D[Linting (Ruff)]
     D --> E[Security Scan (Bandit)]
     E --> F[Unit Tests (Pytest)]
     F --> G{Conflict Check}
-    G -->|Conflict| H[Fail & Notify ❌]
+    G -->|Conflict| H[Fail & Notify ]
     G -->|No Conflict| I[Check Existing PR]
     I -->|Exists| J[Update PR & Exit]
     I -->|New| K[Create PR to 'develop']
     K --> L[Assign Reviewers]
-    L --> M[Notify Team (Slack) ✅]
+    L --> M[Notify Team (Slack) ]
 ```
 
-## 🛡️ Quality Gate Criteria
+## Quality Gate Criteria
 
 Before a PR is created, the code must pass the following checks:
 
@@ -39,7 +39,7 @@ Before a PR is created, the code must pass the following checks:
     *   *Command*: `pytest`
     *   *Coverage*: Must be 100% executable (pipeline ensures tests run, coverage threshold to be configured).
 
-## 🤖 Automatic PR Creation
+## Automatic PR Creation
 
 If the Quality Gate passes:
 1.  **Target Branch**: `develop`
@@ -72,10 +72,10 @@ git commit -am "resolve conflicts"
 git push
 ```
 
-## 📊 Success Criteria
+## Success Criteria
 - **Speed**: PR created < 2 mins after push (dependent on runner availability).
 - **Quality**: 0 Critical/High security issues.
 - **Reliability**: 100% of tests passed before PR creation.
 
-## 🔔 Notifications
+## Notifications
 Notifications are sent to Slack channel `#dev-updates` (Requires `SLACK_WEBHOOK_URL` secret).
