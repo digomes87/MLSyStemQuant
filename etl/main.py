@@ -1,6 +1,10 @@
 import json
 import os
+import sys
 import time
+
+# Add project root to sys.path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import boto3
 import snowflake.connector
@@ -61,7 +65,7 @@ class ETLService(BaseKafkaConsumer):
         else:
             ctx = snowflake.connector.connect(
                 user=os.getenv("SNOWFLAKE_USER"),
-                passwprd=os.getenv("SNOWFLAKE_PASSWORD"),
+                password=os.getenv("SNOWFLAKE_PASSWORD"),
                 account=os.getenv("SNOWFLAKE_ACCOUNT"),
             )
 

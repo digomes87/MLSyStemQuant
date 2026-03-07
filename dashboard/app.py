@@ -1,5 +1,9 @@
 import os
+import sys
 import time
+
+# Add project root to sys.path to allow importing from common
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import altair as alt
 import pandas as pd

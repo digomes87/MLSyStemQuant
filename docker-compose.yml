@@ -88,7 +88,9 @@ services:
       KAFKA_GROUP_ID: etl_group
       AWS_ACCESS_KEY_ID: mock
       AWS_SECRET_ACCESS_KEY: mock
-      SNOWFLAKE_USER: mock
+      SNOWFLAKE_USER: ${SNOWFLAKE_USER:-mock_user}
+      SNOWFLAKE_PASSWORD: ${SNOWFLAKE_PASSWORD:-mock_password}
+      SNOWFLAKE_ACCOUNT: ${SNOWFLAKE_ACCOUNT:-mock_account}
     volumes:
       - .:/app
 

@@ -1,6 +1,10 @@
 import json
 import os
+import sys
 import time
+
+# Add project root to sys.path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from confluent_kafka import Producer
 from dotenv import load_dotenv
