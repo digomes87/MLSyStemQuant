@@ -1,10 +1,9 @@
 apiVersion: apps/v1
-kind: Deploymeny
+kind: Deployment
 metadata:
   name: producer
   labels:
     app: producer
-
 spec:
   replicas: 1
   selector:
@@ -22,8 +21,72 @@ spec:
           command: ["python", "producer/main.py"]
           env:
             - name: KAFKA_BOOTSTRAP_SERVERS
-              value: "kafka:9082"
+              value: "kafka:9092"
             - name: KAFKA_TOPIC_MARKET_DATA
               value: "market_data"
-
 ---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: calculator
+  labels:
+    app: calculator
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: calculator
+  template:
+    metadata:
+      labels:
+        app: calculator
+    spec:
+      containers:
+        - name: calculator
+          image: etf-nav/calculator:latest
+          imagePullPolicy: IfNotPresent
+          command: ["python", "calculator/main.py"]
+          env:
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              value: "kafka:9092"
+            - name: KAFKA_TOPIC_MARKET_DATA
+              value: "market_data"
+            - name: KAFKA_TOPIC_ETF_NAV
+              value: "etf_nav"
+            - name: KAFKA_GROUP_ID
+              value: "nav_calculator_group"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: etl
+  labels:
+    app: etl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: etl
+  template:
+    metadata:
+      labels:
+        app: etl
+    spec:
+      containers:
+        - name: etl
+          image: etf-nav/etl:latest
+          imagePullPolicy: IfNotPresent
+          command: ["python", "etl/main.py"]
+          env:
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              value: "kafka:9092"
+            - name: KAFKA_TOPIC_ETF_NAV
+              value: "etf_nav"
+            - name: KAFKA_GROUP_ID
+              value: "etl_group"
+            - name: AWS_ACCESS_KEY_ID
+              value: "mock"
+            - name: AWS_SECRET_ACCESS_KEY
+              value: "mock"
+            - name: SNOWFLAKE_USER
+              value: "mock"
