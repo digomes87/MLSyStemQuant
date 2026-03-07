@@ -1,1 +1,29 @@
 apiVersion: apps/v1
+kind: Deploymeny
+metadata:
+  name: producer
+  labels:
+    app: producer
+
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: producer
+  template:
+    metadata:
+      labels:
+        app: producer
+    spec:
+      containers:
+        - name: producer
+          image: etf-nav/producer:latest
+          imagePullPolicy: IfNotPresent
+          command: ["python", "producer/main.py"]
+          env:
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              value: "kafka:9082"
+            - name: KAFKA_TOPIC_MARKET_DATA
+              value: "market_data"
+
+---
