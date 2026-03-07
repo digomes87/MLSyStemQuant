@@ -70,4 +70,35 @@ class ETLService(BaseKafkaConsumer):
             ctx.close()
 
     def flush_buffer(self):
-        pass
+        if not self.buffer:
+            return
+
+        self.logger.info(f"Flushing buffer ({len(self.buffer)}) records")
+
+        try:
+            self.upload_to_s3(self.buffer)
+            self.load_to_snowflake(self.buffer)
+            self.buffer = []
+            self.last_upload_time = time.time()
+        except Exception as e:
+            self.logger.error(f"Error during flush: {e}", exc_info=True)
+
+    def process_message(self, msg):
+        data = self.decode_json(msg)
+        if data:
+            self.buffer.append(data)
+
+            if len(self.buffer) >= BATCH_SIZE:
+                self.flush_buffer()
+
+    def on_poll_timeout(self):
+        if time.time() - self.last_upload_time > BATCH_INTERVAL and self.buffer:
+            self.flush_buffer()
+
+    def teardown(self):
+        self.flush_buffer()
+
+
+if __name__ == "__main__":
+    etl = ETLService()
+    etl.run()

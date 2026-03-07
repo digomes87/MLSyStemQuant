@@ -1,12 +1,11 @@
 import json
 import os
 import random
-import signal
-import sys
 import time
 
-from confluent_kafka import Producer
 from dotenv import load_dotenv
+
+from common import BaseKafkaProducer
 
 # Load environment variables
 load_dotenv()
@@ -17,11 +16,12 @@ KAFKA_TOPIC = os.getenv("KAFKA_TOPIC_MARKET_DATA", "market_data")
 CONFIG_FILE = os.path.join(os.path.dirname(__file__), "etf_config.json")
 
 
-class MarketDataProducer:
+class MarketDataProducer(BaseKafkaProducer):
     def __init__(self, config_file):
-        self.running = True
+        super().__init__(
+            bootstrap_servers=KAFKA_BOOTSTRAP_SERVERS, client_id="MarketDataSimulator"
+        )
         self.config = self._load_config(config_file)
-        self.producer = Producer({"bootstrap.servers": KAFKA_BOOTSTRAP_SERVERS})
         self.components = self.config["components"]
 
         # Initialize current prices
@@ -32,15 +32,6 @@ class MarketDataProducer:
     def _load_config(self, config_file):
         with open(config_file, "r") as f:
             return json.load(f)
-
-    def delivery_report(self, err):
-        """Called once for each message produced to indicate delivery result."""
-        if err is not None:
-            print(f"Message delivery failed: {err}")
-        else:
-            # Commenting out for less verbose output
-            # print(f'Message delivered to {msg.topic()} [{msg.partition()}]')
-            pass
 
     def generate_price_update(self):
         """Simulates a market tick for a random component."""
@@ -55,8 +46,8 @@ class MarketDataProducer:
         return {"symbol": symbol, "price": new_price, "timestamp": time.time()}
 
     def run(self):
-        print(f"Starting Market Data Producer. Target topic: {KAFKA_TOPIC}")
-        print(f"Simulating market for: {', '.join(self.components.keys())}")
+        self.logger.info(f"Starting Market Data Producer. Target topic: {KAFKA_TOPIC}")
+        self.logger.info(f"Simulating market for: {', '.join(self.components.keys())}")
 
         try:
             while self.running:
@@ -73,24 +64,17 @@ class MarketDataProducer:
                 # Poll to handle delivery reports
                 self.producer.poll(0)
 
-                print(f"Sent: {event['symbol']} @ {event['price']}")
+                self.logger.info(f"Sent: {event['symbol']} @ {event['price']}")
 
                 # Sleep to simulate real-time frequency (10-100ms)
                 time.sleep(random.uniform(0.01, 0.1))
 
         except KeyboardInterrupt:
-            print("\nStopping producer...")
+            self.logger.info("Stopping producer...")
         finally:
-            self.producer.flush()
+            self.shutdown()
 
 
 if __name__ == "__main__":
     producer = MarketDataProducer(CONFIG_FILE)
-
-    def signal_handler(*_):
-        print("\nGracefully shutting down...")
-        producer.running = False
-        sys.exit(0)
-
-    signal.signal(signal.SIGINT, signal_handler)
     producer.run()
