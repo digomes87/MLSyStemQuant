@@ -196,7 +196,7 @@ try:
                 if msg_count % 10 == 0:
                     last_msg_placeholder.text(f"Last raw: {raw_val[:50]}...")
             except Exception as e:
-                print(f"Error {e}")
+                error_placeholder.error(f"Error {e}")
 
             consumer_service.process_message(msg)
         except Exception as e:
