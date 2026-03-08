@@ -136,4 +136,4 @@ For more details, see [CI/CD Process Documentation](docs/CI_CD_PROCESS.md).
 
 ---
 
-_Built by the QuantML Data Engineering Team._
+_Built by the QuantML Data Engineering Team, In case it's just me._
