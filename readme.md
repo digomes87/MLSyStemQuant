@@ -21,7 +21,7 @@ graph LR
     C -->|NAV Updates| K
     K -->|NAV Updates| E[ETL Service]
     K -->|NAV Updates| D[Dashboard]
-    E -->|JSON/Parquet| S[Storage (S3/Snowflake)]
+    E -->|"JSON/Parquet"| S[Storage (S3/Snowflake)]
     D -->|UI| U[User]
 ```
 
@@ -136,4 +136,4 @@ For more details, see [CI/CD Process Documentation](docs/CI_CD_PROCESS.md).
 
 ---
 
-_Built by the QuantML Data Engineering Team, In case it's just me._
+\_\_Built by the QuantML Data Engineering Team (in case it's just me).
