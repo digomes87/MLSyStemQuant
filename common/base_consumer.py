@@ -61,16 +61,6 @@ class BaseKafkaConsumer(ABC):
 
         return True
 
-    def decode_json(self, msg):
-        """Decodes JSON message value."""
-        try:
-            if msg.value() is None:
-                return None
-            return json.loads(msg.value().decode("utf-8"))
-        except Exception as e:
-            self.logger.error(f"Error decoding JSON: {e}")
-            return None
-
     def run(self):
         """Main consumption loop."""
         self.logger.info("Starting consumer loop...")

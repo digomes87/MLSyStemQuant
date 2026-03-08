@@ -3,8 +3,7 @@ import os
 import sys
 import time
 
-# Add project root to sys.path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 import boto3
 import snowflake.connector
@@ -12,17 +11,14 @@ from dotenv import load_dotenv
 
 from common import BaseKafkaConsumer
 
-# Load environment variables
 load_dotenv()
 
-# Configuration
 KAFKA_BOOTSTRAP_SERVERS = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092")
 KAFKA_TOPIC_NAV = os.getenv("KAFKA_TOPIC_ETF_NAV", "etf_nav")
 KAFKA_GROUP_ID = os.getenv("KAFKA_GROUP_ID", "etl_group")
 BATCH_SIZE = 100  # Number of messages to buffer before upload
 BATCH_INTERVAL = 30  # Seconds to wait before upload
 
-# Mock AWS/Snowflake if credentials not set
 MOCK_AWS = os.getenv("AWS_ACCESS_KEY_ID") == "mock_access_key"
 MOCK_SNOWFLAKE = os.getenv("SNOWFLAKE_USER") == "mock_user"
 

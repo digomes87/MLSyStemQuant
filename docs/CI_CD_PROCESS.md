@@ -14,17 +14,17 @@ The automation is triggered whenever code is pushed to any of the following bran
 ```mermaid
 graph TD
     A[Push to feature/*] --> B{Quality Gate}
-    B -->|Fail| C[Pipeline Failed ]
+    B -->|Fail| C[Pipeline Failed]
     B -->|Pass| D[Linting (Ruff)]
     D --> E[Security Scan (Bandit)]
     E --> F[Unit Tests (Pytest)]
     F --> G{Conflict Check}
-    G -->|Conflict| H[Fail & Notify ]
+    G -->|Conflict| H[Fail & Notify]
     G -->|No Conflict| I[Check Existing PR]
     I -->|Exists| J[Update PR & Exit]
     I -->|New| K[Create PR to 'develop']
     K --> L[Assign Reviewers]
-    L --> M[Notify Team (Slack) ]
+    K --> M[Notify Team (Slack)]
 ```
 
 ## Quality Gate Criteria
@@ -47,7 +47,7 @@ If the Quality Gate passes:
 3.  **Body**: Populated using `.github/pull_request_template.md` + recent commit history.
 4.  **Reviewers**: Automatically assigned (Configured in workflow).
 
-## 🔧 Troubleshooting
+## Troubleshooting
 
 ### 1. "GitHub Actions is not permitted to create or approve pull requests"
 **Cause**: Missing repository permissions.
