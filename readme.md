@@ -125,6 +125,8 @@ Spend a lot time for configure but save time after
 
 Every commit to `main` or `develop` triggers our automated pipeline, which includes:
 
+My loved command - ruff format . && ruff check .
+
 1. **Linting**: Code style checks with `Ruff`.
 2. **Security**: Vulnerability scanning with `Bandit`.
 3. **Testing**: Unit tests with `Pytest`.
