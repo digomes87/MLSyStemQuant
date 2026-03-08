@@ -21,7 +21,7 @@ graph LR
     C -->|NAV Updates| K
     K -->|NAV Updates| E[ETL Service]
     K -->|NAV Updates| D[Dashboard]
-    E -->|"JSON/Parquet"| S[Storage (S3/Snowflake)]
+    E -->|JSONParquet| S3]
     D -->|UI| U[User]
 ```
 
