@@ -1,16 +1,17 @@
 import json
 import os
 import random
+import sys
 import time
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from dotenv import load_dotenv
 
 from common import BaseKafkaProducer
 
-# Load environment variables
 load_dotenv()
 
-# Configuration
 KAFKA_BOOTSTRAP_SERVERS = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092")
 KAFKA_TOPIC = os.getenv("KAFKA_TOPIC_MARKET_DATA", "market_data")
 CONFIG_FILE = os.path.join(os.path.dirname(__file__), "etf_config.json")
@@ -24,7 +25,6 @@ class MarketDataProducer(BaseKafkaProducer):
         self.config = self._load_config(config_file)
         self.components = self.config["components"]
 
-        # Initialize current prices
         self.current_prices = {
             symbol: data["initial_price"] for symbol, data in self.components.items()
         }
@@ -53,7 +53,6 @@ class MarketDataProducer(BaseKafkaProducer):
             while self.running:
                 event = self.generate_price_update()
 
-                # Produce to Kafka
                 self.producer.produce(
                     KAFKA_TOPIC,
                     key=event["symbol"],
@@ -61,12 +60,10 @@ class MarketDataProducer(BaseKafkaProducer):
                     callback=self.delivery_report,
                 )
 
-                # Poll to handle delivery reports
                 self.producer.poll(0)
 
                 self.logger.info(f"Sent: {event['symbol']} @ {event['price']}")
 
-                # Sleep to simulate real-time frequency (10-100ms)
                 time.sleep(random.uniform(0.01, 0.1))
 
         except KeyboardInterrupt:

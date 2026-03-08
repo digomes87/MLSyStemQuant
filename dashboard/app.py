@@ -1,11 +1,20 @@
+import importlib
 import os
+import sys
 import time
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 import altair as alt
 import pandas as pd
 import streamlit as st
 from dotenv import load_dotenv
 
+import common
+import common.base_consumer
+
+importlib.reload(common.base_consumer)
+importlib.reload(common)
 from common import BaseKafkaConsumer
 
 load_dotenv()
@@ -23,7 +32,6 @@ st.set_page_config(
 
 st.title("Real-Time ETF NAV Monitor")
 
-# Sidebar for controls
 with st.sidebar:
     st.header("Configuration")
     st.write(f"**Kafka Broker:** {KAFKA_BOOTSTRAP_SERVERS}")
@@ -44,7 +52,7 @@ class DashboardConsumer(BaseKafkaConsumer):
     """
     Kafka Consumer for Streamlit Dashboard.
     Inherits from BaseKafkaConsumer for connection handling but allows
-    manual polling to integrate with Streamlit's event loop.
+
     """
 
     def __init__(self):
@@ -157,17 +165,42 @@ try:
     status_placeholder = st.empty()
     status_placeholder.success("Connected to Kafka Stream")
 
+    # Debug: List available topics to verify connection
+    try:
+        cluster_metadata = consumer_service.consumer.list_topics(timeout=5.0)
+        topics = list(cluster_metadata.topics.keys())
+        st.sidebar.markdown(f"**Kafka Connection:** OK")
+        st.sidebar.markdown(f"**Topics Found:** {', '.join(topics)}")
+    except Exception as e:
+        st.sidebar.error(f"Failed to connect to Kafka: {e}")
+
+    msg_count = 0
+    msg_placeholder = st.sidebar.empty()
+    last_msg_placeholder = st.sidebar.empty()
+    error_placeholder = st.sidebar.empty()
+
     while True:
         msg = consumer_service.consumer.poll(0.1)
 
         if not consumer_service._is_valid_message(msg):
             continue
 
+        msg_count += 1
+        if msg_count % 10 == 0:
+            msg_placeholder.markdown(f"**Messages Received:** {msg_count}")
+
         try:
+            # Debug: Try to decode manually to show in sidebar if needed
+            try:
+                raw_val = msg.value().decode("utf-8")
+                if msg_count % 10 == 0:
+                    last_msg_placeholder.text(f"Last raw: {raw_val[:50]}...")
+            except:
+                pass
+
             consumer_service.process_message(msg)
         except Exception as e:
-            # Avoid spamming errors
-            st.error(f"Error processing message: {e}")
+            error_placeholder.error(f"Process Error: {e}")
             pass
 
 except Exception as e:

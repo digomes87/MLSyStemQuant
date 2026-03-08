@@ -1,13 +1,15 @@
 import json
 import os
+import sys
 import time
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from confluent_kafka import Producer
 from dotenv import load_dotenv
 
 from common import BaseKafkaConsumer
 
-# Load environment variables
 load_dotenv()
 
 # Configuration
@@ -20,7 +22,6 @@ CONFIG_FILE = "etf_config.json"
 
 class NAVCalculator(BaseKafkaConsumer):
     def __init__(self, config_file):
-        # Initialize base consumer
         super().__init__(
             bootstrap_servers=KAFKA_BOOTSTRAP_SERVERS,
             group_id=KAFKA_GROUP_ID,
@@ -85,7 +86,6 @@ class NAVCalculator(BaseKafkaConsumer):
                     key=self.config["symbol"],
                     value=json.dumps(nav_update),
                 )
-                # Poll to handle delivery reports
                 self.producer.poll(0)
 
                 self.logger.info(f"Updated NAV: {nav} (Trigger: {symbol} @ {price})")

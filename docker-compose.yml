@@ -86,9 +86,11 @@ services:
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       KAFKA_TOPIC_ETF_NAV: etf_nav
       KAFKA_GROUP_ID: etl_group
-      AWS_ACCESS_KEY_ID: mock
-      AWS_SECRET_ACCESS_KEY: mock
-      SNOWFLAKE_USER: mock
+      AWS_ACCESS_KEY_ID: mock_access_key
+      AWS_SECRET_ACCESS_KEY: mock_secret_key
+      SNOWFLAKE_USER: ${SNOWFLAKE_USER:-mock_user}
+      SNOWFLAKE_PASSWORD: ${SNOWFLAKE_PASSWORD:-mock_password}
+      SNOWFLAKE_ACCOUNT: ${SNOWFLAKE_ACCOUNT:-mock_account}
     volumes:
       - .:/app
 

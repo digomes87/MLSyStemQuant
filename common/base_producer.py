@@ -34,12 +34,13 @@ class BaseKafkaProducer(ABC):
         self.logger.info("Received shutdown signal. Stopping...")
         self.running = False
 
-    def delivery_report(self, err):
+    def delivery_report(self, err, msg):
         """Called once for each message produced to indicate delivery result."""
         if err is not None:
             self.logger.error(f"Message delivery failed: {err}")
-        # else:
-        # self.logger.debug(f'Message delivered to {msg.topic()} [{msg.partition()}]')
+        else:
+            # self.logger.debug(f'Message delivered to {msg.topic()} [{msg.partition()}]')
+            pass
 
     def shutdown(self):
         """Clean shutdown."""
