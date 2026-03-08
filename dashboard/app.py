@@ -12,10 +12,10 @@ from dotenv import load_dotenv
 
 import common
 import common.base_consumer
+from common import BaseKafkaConsumer
 
 importlib.reload(common.base_consumer)
 importlib.reload(common)
-from common import BaseKafkaConsumer
 
 load_dotenv()
 
@@ -169,7 +169,7 @@ try:
     try:
         cluster_metadata = consumer_service.consumer.list_topics(timeout=5.0)
         topics = list(cluster_metadata.topics.keys())
-        st.sidebar.markdown(f"**Kafka Connection:** OK")
+        st.sidebar.markdown("**Kafka Connection:** OK")
         st.sidebar.markdown(f"**Topics Found:** {', '.join(topics)}")
     except Exception as e:
         st.sidebar.error(f"Failed to connect to Kafka: {e}")
@@ -195,13 +195,13 @@ try:
                 raw_val = msg.value().decode("utf-8")
                 if msg_count % 10 == 0:
                     last_msg_placeholder.text(f"Last raw: {raw_val[:50]}...")
-            except:
-                pass
+            except Exception as e:
+                error_placeholder.error(f"Error {e}")
 
             consumer_service.process_message(msg)
         except Exception as e:
             error_placeholder.error(f"Process Error: {e}")
-            pass
+
 
 except Exception as e:
     st.error(f"Could not initialize Kafka Consumer: {e}")
